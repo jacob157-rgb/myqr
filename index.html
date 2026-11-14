@@ -11,6 +11,7 @@
             --accent: #10b981;
             --accent-glow: rgba(16, 185, 129, 0.4);
             --primary: #3b82f6;
+            --danger: #ef4444;
             --text-main: #f8fafc;
             --text-sub: #94a3b8;
         }
@@ -37,7 +38,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 8px 4px 16px 4px;
+            padding: 4px 4px 12px 4px;
         }
         .brand {
             display: flex;
@@ -137,19 +138,96 @@
             50% { opacity: 1; }
             100% { top: 82%; opacity: 0.9; }
         }
+
+        /* Permission Notice Box */
+        .permission-card {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: #1e293b;
+            padding: 20px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            z-index: 20;
+        }
+        .permission-card.active {
+            display: flex;
+        }
+        .perm-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+        .perm-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+        .perm-desc {
+            font-size: 12px;
+            color: var(--text-sub);
+            line-height: 1.4;
+            margin-bottom: 16px;
+        }
+        .btn-action-primary {
+            background: var(--accent);
+            color: #064e3b;
+            font-weight: 700;
+            font-size: 13px;
+            border: none;
+            padding: 11px 18px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 280px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            margin-bottom: 8px;
+        }
+        .btn-action-secondary {
+            background: #334155;
+            color: var(--text-main);
+            font-weight: 600;
+            font-size: 12px;
+            border: none;
+            padding: 9px 16px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 280px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
         .controls {
             width: 100%;
             max-width: 440px;
-            margin-top: 18px;
+            margin-top: 14px;
             display: flex;
             justify-content: center;
-            gap: 12px;
+            gap: 10px;
+            flex-wrap: wrap;
         }
         .ctrl-btn {
             background: #1e293b;
             color: var(--text-main);
             border: 1px solid #334155;
-            padding: 10px 18px;
+            padding: 10px 16px;
             border-radius: 12px;
             font-size: 13px;
             font-weight: 600;
@@ -172,7 +250,7 @@
             text-align: center;
             font-size: 13px;
             color: var(--text-sub);
-            margin: 16px 0;
+            margin: 12px 0;
             max-width: 400px;
             line-height: 1.5;
         }
@@ -202,7 +280,7 @@
             font-size: 11px;
             color: #475569;
             text-align: center;
-            padding-top: 12px;
+            padding-top: 8px;
         }
     </style>
 </head>
@@ -230,21 +308,70 @@
         </a>
     </div>
 
+    <!-- Scanner Viewport -->
     <div class="scanner-container">
         <video id="videoElement" playsinline muted></video>
-        <div class="viewfinder"></div>
-        <div class="laser"></div>
+        <div class="viewfinder" id="viewfinder"></div>
+        <div class="laser" id="laser"></div>
         <canvas id="qrCanvas" style="display:none;"></canvas>
+
+        <!-- Permission Denied Helper Screen -->
+        <div class="permission-card" id="permissionCard">
+            <div class="perm-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+            </div>
+            <div class="perm-title">Izin Kamera Dibatasi Sistem HP</div>
+            <div class="perm-desc" id="permDescText">
+                Jika dibuka dari pop-up Wi-Fi bawaan, sistem Android/iOS memblokir kamera live. Gunakan opsi cepat di bawah ini:
+            </div>
+
+            <!-- Option 1: Native Camera Capture (Anti-fail, works on 100% of devices) -->
+            <label class="btn-action-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <span>📷 Jepret Foto Voucher (Instan)</span>
+                <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleFileSelect(this)">
+            </label>
+
+            <!-- Option 2: Open in Chrome via Android Intent -->
+            <a id="btnOpenChrome" href="#" class="btn-action-secondary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polygon points="12 8 8 12 12 16 12 8"></polygon>
+                </svg>
+                <span>Buka di Google Chrome Asli</span>
+            </a>
+
+            <!-- Option 3: Retry -->
+            <button type="button" class="btn-action-secondary" style="margin-top:6px; background:transparent; border:1px solid #475569;" onclick="requestCameraExplicit()">
+                <span>🔄 Ulangi Minta Izin Kamera</span>
+            </button>
+        </div>
     </div>
 
     <p class="instructions" id="instructionText">Arahkan kamera ke QR Code pada lembar voucher Anda</p>
 
+    <!-- Controls -->
     <div class="controls">
+        <label class="ctrl-btn" style="background:#10b981; color:#064e3b; border-color:#10b981;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+            </svg>
+            <span>Foto Voucher</span>
+            <input type="file" id="cameraSnapInput" accept="image/*" capture="environment" style="display:none;" onchange="handleFileSelect(this)">
+        </label>
+
         <button type="button" class="ctrl-btn" id="btnFlipCam" onclick="toggleCamera()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M20 10c0-4.418-3.582-8-8-8s-8 3.582-8 8c0 1.942.695 3.722 1.854 5.111L4 17h6v-6L8.03 12.97C7.387 12.115 7 11.1 7 10c0-2.761 2.239-5 5-5s5 2.239 5 5h3z"></path>
             </svg>
-            <span>Putar Kamera</span>
+            <span>Putar</span>
         </button>
 
         <button type="button" class="ctrl-btn" id="btnTorch" onclick="toggleTorch()" style="display:none;">
@@ -253,16 +380,6 @@
             </svg>
             <span>Senter</span>
         </button>
-
-        <label class="ctrl-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                <polyline points="21 15 16 10 5 21"></polyline>
-            </svg>
-            <span>Pilih Foto</span>
-            <input type="file" id="fileInput" accept="image/*" style="display:none;" onchange="handleFileSelect(this)">
-        </label>
     </div>
 
     <div class="status-toast" id="statusToast">
@@ -299,6 +416,13 @@
         var returnLink = document.getElementById('btnReturnLogin');
         if (returnLink) {
             returnLink.href = 'http://' + hotspotDns + '/login';
+        }
+
+        // Set up Android intent link to breakout of Captive Portal WebView into real Chrome
+        var chromeIntentBtn = document.getElementById('btnOpenChrome');
+        if (chromeIntentBtn) {
+            var currentUrl = window.location.href.replace('https://', '');
+            chromeIntentBtn.href = 'intent://' + currentUrl + '#Intent;scheme=https;package=com.android.chrome;end';
         }
 
         function playSuccessBeep() {
@@ -339,14 +463,28 @@
                 video.play();
                 isScanning = true;
 
+                // Hide permission helper if camera succeeds
+                document.getElementById('permissionCard').classList.remove('active');
+                document.getElementById('viewfinder').style.display = 'block';
+                document.getElementById('laser').style.display = 'block';
+                document.getElementById('instructionText').textContent = 'Arahkan kamera ke QR Code pada voucher Anda';
+
                 if (videoTrack && videoTrack.getCapabilities && videoTrack.getCapabilities().torch) {
                     document.getElementById('btnTorch').style.display = 'inline-flex';
                 }
 
                 requestAnimationFrame(scanTick);
             }).catch(function(err) {
-                document.getElementById('instructionText').textContent = 'Kamera tidak dapat diakses: ' + err.message + '. Gunakan tombol Pilih Foto.';
+                // Show permission helper screen
+                document.getElementById('permissionCard').classList.add('active');
+                document.getElementById('viewfinder').style.display = 'none';
+                document.getElementById('laser').style.display = 'none';
+                document.getElementById('instructionText').textContent = 'Kamera dicegah sistem. Gunakan tombol Jepret Foto Voucher.';
             });
+        }
+
+        function requestCameraExplicit() {
+            startCamera(currentFacingMode);
         }
 
         function toggleCamera() {
@@ -398,16 +536,30 @@
                 var img = new Image();
                 img.onload = function() {
                     var canvas = document.getElementById('qrCanvas');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
                     var ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, img.width, img.height);
-                    var imgData = ctx.getImageData(0, 0, img.width, img.height);
+
+                    var maxDim = 800;
+                    var w = img.width;
+                    var h = img.height;
+                    if (w > maxDim || h > maxDim) {
+                        if (w > h) {
+                            h = Math.round((h * maxDim) / w);
+                            w = maxDim;
+                        } else {
+                            w = Math.round((w * maxDim) / h);
+                            h = maxDim;
+                        }
+                    }
+
+                    canvas.width = w;
+                    canvas.height = h;
+                    ctx.drawImage(img, 0, 0, w, h);
+                    var imgData = ctx.getImageData(0, 0, w, h);
                     var code = jsQR(imgData.data, imgData.width, imgData.height);
                     if (code && code.data) {
                         onQrScanned(code.data);
                     } else {
-                        alert('QR Code tidak ditemukan pada gambar. Pastikan gambar jelas.');
+                        alert('QR Code tidak ditemukan pada gambar. Pastikan gambar jelas & coba lagi.');
                     }
                 };
                 img.src = e.target.result;
